@@ -13,10 +13,18 @@ const blogSchema = new mongoose.Schema({
         type: String,
         default: 'https://via.placeholder.com/150' // Default if none provided
     },
+    altText: {
+        type: String,
+        default: ''
+    },
     status: {
         type: String,
         enum: ['Active', 'Inactive'],
         default: 'Active'
+    },
+    metaTitle: {
+        type: String,
+        default: ''
     },
     metaKeywords: {
         type: String,

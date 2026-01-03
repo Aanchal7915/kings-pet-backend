@@ -27,6 +27,7 @@ connectDB();
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/blogs', require('./routes/blogRoutes'));
+app.use('/api/seo', require('./routes/seoRoutes'));
 
 const PORT = process.env.PORT || 5000;
 
