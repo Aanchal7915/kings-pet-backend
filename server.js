@@ -43,71 +43,73 @@ app.use(express.static(frontendPath));
 app.get(/.*/, async (req, res) => {
     try {
         const url = req.path;
-        let section = 'home';
-        // 1. Identify Section based on URL (Mapping Paths to Admin Sections)
         const pathParts = url.split('/').filter(p => p);
-        if (url === '/' || url === '' || pathParts.length === 0) {
-            section = 'home';
-        } else {
-            const firstPart = pathParts[0];
-            // Match to known sections
-            const validSections = ['services', 'gallery', 'about', 'team', 'blog', 'booking', 'contact', 'pets-care', 'privacy', 'terms'];
-            if (validSections.includes(firstPart)) {
-                section = firstPart;
+        const firstPart = pathParts[0]?.toLowerCase();
+
+        let section = 'home';
+        let blogId = null;
+
+        if (firstPart) {
+            if (firstPart === 'blog' && pathParts[1]) {
+                section = 'blog-detail';
+                blogId = pathParts[1];
             } else {
-                section = 'home'; // Default
+                const validSections = ['services', 'gallery', 'about', 'team', 'blog', 'booking', 'contact', 'pets-care', 'privacy', 'terms', 'privacy-policy', 'terms-of-service'];
+                if (validSections.includes(firstPart)) {
+                    section = firstPart;
+                }
             }
         }
 
-        let title = 'Kings Pet Hospital | Trusted Pet Care';
-        let description = 'Kings Pet Hospital - Professional pet care services, expert veterinarians, and modern medical facilities.';
-        let keywords = 'Kings Pet Hospital, Pet Hospital, Veterinary, Pet Care';
+        // Debug Logs for Render
+        console.log(`[DEBUG] SEO Section Match: "${section}" | Original Path: "${url}"`);
 
-        // 2. Specialized SEO for Blog Detail
-        const urlParts = url.split('/');
-        if (urlParts[1] === 'blog' && urlParts[2]) {
-            try {
-                const blogId = urlParts[2];
-                const blog = await Blog.findById(blogId);
-                if (blog) {
-                    title = blog.metaTitle || blog.title || title;
-                    description = blog.metaDescription || description;
-                    keywords = blog.metaKeywords || keywords;
+        // Default Fallbacks
+        let title = 'Kings Pet Hospital | Trusted Pet Care';
+        let description = 'Professional pet care services, expert veterinarians, and modern medical facilities.';
+        let keywords = 'Pet Care, Hospital, Veterinary';
+
+        // 2. Fetch Data from DB
+        try {
+            if (section === 'blog-detail' && blogId) {
+                const blogData = await Blog.findById(blogId);
+                if (blogData) {
+                    title = blogData.metaTitle || blogData.title || title;
+                    description = blogData.metaDescription || blogData.description || description;
+                    keywords = blogData.metaKeywords || blogData.keywords || keywords;
+                    console.log(`[DEBUG] Found Blog SEO for ID: ${blogId}`);
                 }
-            } catch (err) {
-                console.log('SEO: Blog not found or ID error:', err.message);
-            }
-        } 
-        // 3. Section SEO from Database
-        else {
-            try {
-                const seoData = await PageSEO.findOne({ section });
+            } else {
+                const seoData = await PageSEO.findOne({ 
+                    section: { $regex: new RegExp('^' + section + '$', 'i') } 
+                });
                 if (seoData) {
                     title = seoData.title || title;
-                    description = seoData.metaDescription || description;
-                    keywords = seoData.seoText || keywords;
+                    description = seoData.metaDescription || seoData.description || description;
+                    keywords = seoData.metaKeywords || seoData.keywords || keywords;
+                    console.log(`[DEBUG] DB Found SEO for section: ${section} | Title: ${title}`);
+                } else {
+                    console.log(`[DEBUG] No SEO found in DB for: ${section} (Using Defaults)`);
                 }
-            } catch (err) {
-                console.log('SEO: Section fetch error:', err.message);
             }
+        } catch (dbError) {
+            console.error('[DEBUG] Database Error during SEO fetch:', dbError.message);
         }
 
+        // 3. Inject into HTML
         const indexPath = path.join(frontendPath, 'index.html');
         if (!fs.existsSync(indexPath)) {
             return res.status(404).send('Site content not found. Please run "npm run build" in the frontend folder.');
         }
 
         let html = fs.readFileSync(indexPath, 'utf8');
-
-        // Replacement Logic
         html = html.replace(/{{SEO_TITLE}}/g, title);
         html = html.replace(/{{SEO_DESCRIPTION}}/g, description || '');
         html = html.replace(/{{SEO_KEYWORDS}}/g, keywords || '');
 
-        res.set('Content-Type', 'text/html');
         res.send(html);
-    } catch (error) {
-        console.error('Critical SEO Error:', error);
+    } catch (err) {
+        console.error('[DEBUG] Critical SEO Injection Error:', err);
         res.status(500).send('Internal Server Error');
     }
 });
