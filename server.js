@@ -86,7 +86,7 @@ app.get(/.*/, async (req, res) => {
                 if (seoData) {
                     title = seoData.title || title;
                     description = seoData.metaDescription || seoData.description || description;
-                    keywords = seoData.metaKeywords || seoData.keywords || keywords;
+                    keywords = seoData.seoText || keywords;
                     console.log(`[DEBUG] DB Found SEO for section: ${section} | Title: ${title}`);
                 } else {
                     console.log(`[DEBUG] No SEO found in DB for: ${section} (Using Defaults)`);
