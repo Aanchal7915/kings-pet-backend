@@ -35,9 +35,9 @@ app.use('/api/seo', require('./routes/seoRoutes'));
 
 const PORT = process.env.PORT || 5000;
 
-// Serve Static Files from Frontend Build (Must be after API routes)
+// Serve Static Files from Frontend Build (Disabled index to allow SEO injection priority)
 const frontendPath = path.join(__dirname, 'dist');
-app.use(express.static(frontendPath));
+app.use(express.static(frontendPath, { index: false }));
 
 // Dynamic SEO Injector Catch-all (Express 5 Regex Syntax)
 app.get(/.*/, async (req, res) => {
