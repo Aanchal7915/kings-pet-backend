@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const PageSEO = require('./models/PageSEO');
 const Blog = require('./models/Blog');
+const Slot = require('./models/Slot');
 
 // Load env vars
 dotenv.config();
@@ -21,6 +22,15 @@ const connectDB = async () => {
     try {
         const conn = await mongoose.connect(process.env.MONGO_URI);
         console.log(`MongoDB Connected: ${conn.connection.host}`);
+
+        try {
+            await Slot.collection.dropIndex('startAt_1');
+            console.log('Dropped stale Slot index: startAt_1');
+        } catch (indexError) {
+            if (!String(indexError?.message || '').includes('index not found')) {
+                console.warn('Slot index cleanup warning:', indexError.message);
+            }
+        }
     } catch (error) {
         console.error(`Error: ${error.message}`);
         process.exit(1);
@@ -32,6 +42,14 @@ connectDB();
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/blogs', require('./routes/blogRoutes'));
 app.use('/api/seo', require('./routes/seoRoutes'));
+app.use('/api/catalog', require('./routes/catalogRoutes'));
+app.use('/api/category', require('./routes/categoryRoutes'));
+app.use('/api/subcategory', require('./routes/subcategoryRoutes'));
+app.use('/api/service', require('./routes/serviceRoutes'));
+app.use('/api/bookings', require('./routes/bookingRoutes'));
+app.use('/api/doctors', require('./routes/doctorRoutes'));
+app.use('/api/products', require('./routes/productRoutes'));
+app.use('/api/slots', require('./routes/slotRoutes'));
 
 const PORT = process.env.PORT || 5000;
 

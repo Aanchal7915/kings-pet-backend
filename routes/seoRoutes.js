@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getAllSEO, updateSectionSEO, initializeDefaultSEO } = require('../controllers/seoController');
-const { protect } = require('../middleware/authMiddleware'); // Assuming you have auth middleware
+const { protect } = require('../middleware/auth');
 
 router.get('/', getAllSEO);
 router.post('/update', protect, updateSectionSEO);
