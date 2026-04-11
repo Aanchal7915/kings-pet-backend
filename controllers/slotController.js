@@ -156,11 +156,13 @@ exports.generateSlots = async (req, res) => {
             cursor.setDate(cursor.getDate() + 1);
         }
 
+        let created = 0;
         if (operations.length > 0) {
-            await Slot.bulkWrite(operations, { ordered: false });
+            const result = await Slot.bulkWrite(operations, { ordered: false });
+            created = Number(result.upsertedCount || 0);
         }
 
-        res.status(200).json({ success: true, message: 'Slots generated successfully', generated: operations.length });
+        res.status(200).json({ success: true, created });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
@@ -225,8 +227,12 @@ exports.updateSlot = async (req, res) => {
 // Delete slot (admin only)
 exports.deleteSlot = async (req, res) => {
     try {
-        const slot = await Slot.findByIdAndDelete(req.params.id);
+        const slot = await Slot.findById(req.params.id);
         if (!slot) return res.status(404).json({ success: false, error: 'Slot not found' });
+        if (Number(slot.bookedCount) > 0) {
+            return res.status(400).json({ success: false, error: 'Cannot delete slot with bookings' });
+        }
+        await slot.deleteOne();
         res.status(200).json({ success: true, message: 'Slot deleted' });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });

@@ -7,12 +7,12 @@ const {
     updateService,
     deleteService,
 } = require('../controllers/catalogController');
-const { protect } = require('../middleware/auth');
+const { protect, adminOnly } = require('../middleware/auth');
 
 router.get('/', getServices);
 router.get('/:id', getServiceById);
-router.post('/', protect, createService);
-router.put('/:id', protect, updateService);
-router.delete('/:id', protect, deleteService);
+router.post('/', protect, adminOnly, createService);
+router.put('/:id', protect, adminOnly, updateService);
+router.delete('/:id', protect, adminOnly, deleteService);
 
 module.exports = router;

@@ -1,7 +1,6 @@
 const Category = require('../models/Category');
 const SubCategory = require('../models/SubCategory');
 const Service = require('../models/Service');
-const Product = require('../models/Product');
 
 const buildActiveQuery = (query = {}) => {
     const filter = {};
@@ -86,6 +85,8 @@ const buildServicePayload = (body) => ({
     image: normalizeText(body.image),
     description: normalizeText(body.description),
     isFeatured: toBoolean(body.isFeatured),
+    useCustomAdvance: toBoolean(body.useCustomAdvance),
+    customAdvanceAmount: Number(body.customAdvanceAmount || 0),
     isActive: body.isActive !== false,
     variants: normalizeVariants(body.variants),
 });
@@ -380,19 +381,17 @@ exports.getServiceById = async (req, res) => {
     }
 };
 
-// Get all products
-exports.getProducts = async (req, res) => {
+exports.getServiceBySlug = async (req, res) => {
     try {
-        const products = await Product.find();
-        res.status(200).json({
-            success: true,
-            data: products
-        });
+        const service = await Service.findOne({ slug: req.params.slug, isActive: true })
+            .populate('category', 'name slug image isActive')
+            .populate('subCategory', 'name slug image isActive');
+        if (!service) {
+            return res.status(404).json({ success: false, error: 'Service not found' });
+        }
+        return res.status(200).json({ success: true, data: service });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
+        return sendError(res, error);
     }
 };
 

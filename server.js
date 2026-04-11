@@ -48,8 +48,9 @@ app.use('/api/subcategory', require('./routes/subcategoryRoutes'));
 app.use('/api/service', require('./routes/serviceRoutes'));
 app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/doctors', require('./routes/doctorRoutes'));
-app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/slots', require('./routes/slotRoutes'));
+app.use('/api/settings', require('./routes/settingsRoutes'));
+app.use('/api/analytics', require('./routes/analyticsRoutes'));
 
 const PORT = process.env.PORT || 5000;
 

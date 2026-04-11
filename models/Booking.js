@@ -1,21 +1,20 @@
 const mongoose = require('mongoose');
 
-const rescheduleHistorySchema = new mongoose.Schema(
+const statusHistorySchema = new mongoose.Schema(
   {
-    fromSlot: { type: mongoose.Schema.Types.ObjectId, ref: 'Slot', required: true },
-    toSlot: { type: mongoose.Schema.Types.ObjectId, ref: 'Slot', required: true },
-    at: { type: Date, default: Date.now },
-    by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    status: { type: String, required: true },
+    changedAt: { type: Date, default: Date.now },
+    changedBy: { type: String, default: 'admin' },
     note: { type: String, default: '' },
   },
   { _id: false }
 );
 
-const statusHistorySchema = new mongoose.Schema(
+const rescheduleHistorySchema = new mongoose.Schema(
   {
-    status: { type: String, required: true },
+    fromSlot: { type: mongoose.Schema.Types.ObjectId, ref: 'Slot', required: true },
+    toSlot: { type: mongoose.Schema.Types.ObjectId, ref: 'Slot', required: true },
     at: { type: Date, default: Date.now },
-    by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     note: { type: String, default: '' },
   },
   { _id: false }
@@ -23,47 +22,42 @@ const statusHistorySchema = new mongoose.Schema(
 
 const bookingSchema = new mongoose.Schema(
   {
+    bookingId: { type: String, unique: true, required: true },
     customer: {
       name: { type: String, required: true, trim: true },
       phone: { type: String, required: true, trim: true },
-      email: { type: String, default: '', trim: true },
+      petName: { type: String, required: true, trim: true },
+      petType: { type: String, required: true, trim: true },
+      petBreed: { type: String, default: '', trim: true },
     },
-    pet: {
-      name: { type: String, default: '', trim: true },
-      type: { type: String, default: '', trim: true },
-      breed: { type: String, default: '', trim: true },
+    service: {
+      ref: { type: mongoose.Schema.Types.ObjectId, ref: 'Service', required: true },
+      name: { type: String, required: true },
     },
-
-    service: { type: mongoose.Schema.Types.ObjectId, ref: 'Service', required: true },
     variant: {
       name: { type: String, required: true },
-      price: { type: Number, required: true, min: 0 },
-      bookingAmount: { type: Number, required: true, min: 0 },
+      fullPrice: { type: Number, required: true, min: 0 },
     },
-
     slot: { type: mongoose.Schema.Types.ObjectId, ref: 'Slot', required: true },
-
+    advancePaid: { type: Number, required: true, min: 0 },
+    remainingAmount: { type: Number, required: true, min: 0 },
+    razorpayOrderId: { type: String, required: true },
+    razorpayPaymentId: { type: String, required: true },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'partial', 'paid', 'refunded'],
-      default: 'pending',
+      enum: ['advance_paid', 'fully_paid', 'refunded'],
+      default: 'advance_paid',
     },
-    status: {
+    bookingStatus: {
       type: String,
-      enum: ['pending', 'confirmed', 'completed', 'cancelled', 'refunded'],
-      default: 'pending',
+      enum: ['confirmed', 'completed', 'rejected', 'cancelled', 'cancelled_refunded', 'rejected_refunded'],
+      default: 'confirmed',
     },
-
-    rescheduleHistory: {
-      type: [rescheduleHistorySchema],
-      default: [],
-    },
-    statusHistory: {
-      type: [statusHistorySchema],
-      default: [{ status: 'pending', note: 'Booking created' }],
-    },
+    statusHistory: { type: [statusHistorySchema], default: [] },
+    adminNote: { type: String, default: '' },
+    rescheduleHistory: { type: [rescheduleHistorySchema], default: [] },
   },
-  { timestamps: true }
+  { timestamps: { createdAt: true, updatedAt: true } }
 );
 
 module.exports = mongoose.model('Booking', bookingSchema);

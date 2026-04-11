@@ -1,4 +1,5 @@
-import jwt from 'jsonwebtoken';
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 const getTokenFromRequest = (req) => {
   const authHeader = req.headers.authorization || '';
@@ -23,11 +24,26 @@ const protect = (req, res, next) => {
   }
 };
 
-const adminOnly = (req, res, next) => {
-  if (!req.user || req.user.role !== 'admin') {
+const adminOnly = async (req, res, next) => {
+  if (!req.user) {
     return res.status(403).json({ success: false, error: 'Forbidden: Admin access required' });
   }
-  return next();
+
+  if (req.user.role === 'admin') {
+    return next();
+  }
+
+  try {
+    const user = await User.findById(req.user.id).select('role');
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Forbidden: Admin access required' });
+    }
+
+    req.user.role = user.role;
+    return next();
+  } catch (_error) {
+    return res.status(403).json({ success: false, error: 'Forbidden: Admin access required' });
+  }
 };
 
-export { protect, adminOnly };
+module.exports = { protect, adminOnly };

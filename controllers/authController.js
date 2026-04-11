@@ -4,15 +4,15 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
 // Helper to sign JWT
-const signToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
+const signToken = (id, role) => {
+    return jwt.sign({ id, role }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRE || '30d'
     });
 };
 
 // Helper to send token response
 const createSendToken = (user, statusCode, res) => {
-    const token = signToken(user._id);
+    const token = signToken(user._id, user.role);
 
     // Remove password from output
     user.password = undefined;

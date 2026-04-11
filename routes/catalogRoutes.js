@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { protect, adminOnly } = require('../middleware/auth');
 const { 
     getCategories, 
     createCategory, 
@@ -14,22 +15,22 @@ const {
     updateService,
     deleteService,
     getServiceById,
-    getProducts 
+    getServiceBySlug
 } = require('../controllers/catalogController');
 
 router.get('/categories', getCategories);
-router.post('/categories', createCategory);
-router.put('/categories/:id', updateCategory);
-router.delete('/categories/:id', deleteCategory);
+router.post('/categories', protect, adminOnly, createCategory);
+router.put('/categories/:id', protect, adminOnly, updateCategory);
+router.delete('/categories/:id', protect, adminOnly, deleteCategory);
 router.get('/subcategories', getSubCategories);
-router.post('/subcategories', createSubCategory);
-router.put('/subcategories/:id', updateSubCategory);
-router.delete('/subcategories/:id', deleteSubCategory);
+router.post('/subcategories', protect, adminOnly, createSubCategory);
+router.put('/subcategories/:id', protect, adminOnly, updateSubCategory);
+router.delete('/subcategories/:id', protect, adminOnly, deleteSubCategory);
 router.get('/services', getServices);
-router.post('/services', createService);
-router.put('/services/:id', updateService);
-router.delete('/services/:id', deleteService);
+router.post('/services', protect, adminOnly, createService);
+router.put('/services/:id', protect, adminOnly, updateService);
+router.delete('/services/:id', protect, adminOnly, deleteService);
+router.get('/services/slug/:slug', getServiceBySlug);
 router.get('/services/:id', getServiceById);
-router.get('/products', getProducts);
 
 module.exports = router;

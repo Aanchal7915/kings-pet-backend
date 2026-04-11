@@ -9,14 +9,14 @@ const {
     updateSlot,
     deleteSlot
 } = require('../controllers/slotController');
-const { protect } = require('../middleware/auth');
+const { protect, adminOnly } = require('../middleware/auth');
 
 router.get('/available', getAvailableSlots);
-router.get('/', getSlots);
-router.post('/generate', protect, generateSlots);
-router.post('/', protect, createSlot);
-router.put('/:id/block', protect, toggleSlotBlock);
-router.put('/:id', protect, updateSlot);
-router.delete('/:id', protect, deleteSlot);
+router.get('/', protect, adminOnly, getSlots);
+router.post('/generate', protect, adminOnly, generateSlots);
+router.post('/', protect, adminOnly, createSlot);
+router.put('/:id/block', protect, adminOnly, toggleSlotBlock);
+router.put('/:id', protect, adminOnly, updateSlot);
+router.delete('/:id', protect, adminOnly, deleteSlot);
 
 module.exports = router;

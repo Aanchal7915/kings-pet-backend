@@ -84,6 +84,15 @@ const serviceSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    useCustomAdvance: {
+      type: Boolean,
+      default: false,
+    },
+    customAdvanceAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     isActive: {
       type: Boolean,
       default: true,
