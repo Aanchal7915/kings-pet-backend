@@ -14,6 +14,10 @@ const PageSEOSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    metaKeywords: {
+        type: String,
+        default: '',
+    },
     h1OrH2: {
         type: String,
         default: '',

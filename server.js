@@ -65,54 +65,53 @@ app.get(/.*/, async (req, res) => {
         const pathParts = url.split('/').filter(p => p);
         const firstPart = pathParts[0]?.toLowerCase();
 
-        let section = 'home';
-        let blogId = null;
+        let section = firstPart || 'home';
+        let blogId = (firstPart === 'blog') ? pathParts[1] : null;
+        let serviceSlug = (firstPart === 'services') ? pathParts[1] : null;
 
-        if (firstPart) {
-            if (firstPart === 'blog' && pathParts[1]) {
-                section = 'blog-detail';
-                blogId = pathParts[1];
-            } else {
-                const validSections = ['services', 'gallery', 'about', 'team', 'blog', 'booking', 'contact', 'pets-care', 'privacy', 'terms', 'privacy-policy', 'terms-of-service'];
-                if (validSections.includes(firstPart)) {
-                    section = firstPart;
-                }
-            }
-        }
-
-        // Debug Logs for Render
-        console.log(`[DEBUG] SEO Section Match: "${section}" | Original Path: "${url}"`);
+        section = section.toLowerCase().trim();
+        console.log(`[SEO UNIVERSAL] URL: ${url} | Section Key: ${section}`);
 
         // Default Fallbacks
         let title = 'Kings Pet Hospital | Trusted Pet Care';
         let description = 'Professional pet care services, expert veterinarians, and modern medical facilities.';
-        let keywords = 'Pet Care, Hospital, Veterinary';
+        let keywords = 'Kings Pet Hospital, Veterinary, Pet Care, Veterinarian near me';
 
         // 2. Fetch Data from DB
         try {
-            if (section === 'blog-detail' && blogId) {
+            if (firstPart === 'blog' && blogId) {
                 const blogData = await Blog.findById(blogId);
                 if (blogData) {
                     title = blogData.metaTitle || blogData.title || title;
                     description = blogData.metaDescription || blogData.description || description;
                     keywords = blogData.metaKeywords || blogData.keywords || keywords;
-                    console.log(`[DEBUG] Found Blog SEO for ID: ${blogId}`);
                 }
-            } else {
-                const seoData = await PageSEO.findOne({ 
-                    section: { $regex: new RegExp('^' + section + '$', 'i') } 
-                });
-                if (seoData) {
-                    title = seoData.title || title;
-                    description = seoData.metaDescription || seoData.description || description;
-                    keywords = seoData.seoText || keywords;
-                    console.log(`[DEBUG] DB Found SEO for section: ${section} | Title: ${title}`);
-                } else {
-                    console.log(`[DEBUG] No SEO found in DB for: ${section} (Using Defaults)`);
+            } else if (firstPart === 'services' && serviceSlug) {
+                const Service = require('./models/Service');
+                const serviceData = await Service.findOne({ slug: serviceSlug });
+                if (serviceData) {
+                    title = `${serviceData.name} | Kings Pet Hospital`;
+                    description = serviceData.description ? serviceData.description.substring(0, 160) : description;
                 }
+            } 
+
+            // Always try to find a matching PageSEO section even if we found a blog/service 
+            // This allows specific sections to override defaults
+            // Fuzzy match: handles 'pets-care' vs 'Pets Care'
+            const seoData = await PageSEO.findOne({ 
+                $or: [
+                    { section: { $regex: new RegExp('^' + section + '$', 'i') } },
+                    { section: { $regex: new RegExp('^' + section.replace(/-/g, ' ') + '$', 'i') } }
+                ]
+            });
+            
+            if (seoData) {
+                title = seoData.title || title;
+                description = seoData.metaDescription || seoData.description || description;
+                keywords = seoData.metaKeywords || seoData.seoText || keywords;
             }
         } catch (dbError) {
-            console.error('[DEBUG] Database Error during SEO fetch:', dbError.message);
+            console.error('[SEO UNIVERSAL] DB Error:', dbError.message);
         }
 
         // 3. Inject into HTML
@@ -122,9 +121,17 @@ app.get(/.*/, async (req, res) => {
         }
 
         let html = fs.readFileSync(indexPath, 'utf8');
+
+        // Dynamic Canonical URL (Full URL for SEO)
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+        const host = req.get('host');
+        const fullUrl = `${protocol}://${host}${url}`;
+
+        // Global replacements for all placeholders found in your frontend index.html
         html = html.replace(/{{SEO_TITLE}}/g, title);
         html = html.replace(/{{SEO_DESCRIPTION}}/g, description || '');
         html = html.replace(/{{SEO_KEYWORDS}}/g, keywords || '');
+        html = html.replace(/{{SEO_CANONICAL}}/g, fullUrl);
 
         res.send(html);
     } catch (err) {
