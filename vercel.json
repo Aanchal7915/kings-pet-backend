@@ -1,27 +1,24 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "server.js",
-      "use": "@vercel/node"
+      "source": "/api/(.*)",
+      "destination": "server.js"
+    },
+    {
+      "source": "/assets/(.*)",
+      "destination": "dist/assets/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "server.js"
     }
   ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "server.js"
-    },
-    {
-      "src": "/admin/(.*)",
-      "dest": "server.js"
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "dist/assets/$1"
-    },
-    {
-       "src": "/(.*)",
-       "dest": "server.js"
+  "functions": {
+    "server.js": {
+      "memory": 1024,
+      "maxDuration": 25,
+      "includeFiles": "dist/**"
     }
-  ]
+  }
 }
