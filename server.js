@@ -51,6 +51,9 @@ app.use('/api/doctors', require('./routes/doctorRoutes'));
 app.use('/api/slots', require('./routes/slotRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
+app.use('/api/petfoods', require('./routes/petFoodRoutes'));
+app.use('/api/petlistings', require('./routes/petListingRoutes'));
+app.use('/api/petorders', require('./routes/petOrderRoutes'));
 
 const PORT = process.env.PORT || 5000;
 
