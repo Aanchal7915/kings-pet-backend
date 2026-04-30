@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <rect width="1200" height="900" fill="#f3e5f5"/>
+  <rect x="320" y="95" width="560" height="760" rx="34" fill="#ffffff" stroke="#cfd8dc" stroke-width="10"/>
+  <rect x="430" y="35" width="340" height="100" rx="20" fill="#6a1b9a"/>
+  <rect x="390" y="300" width="420" height="260" rx="18" fill="#8e24aa"/>
+  <text x="600" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="52" font-weight="700" fill="#ffffff">Joint Care</text>
+  <text x="600" y="490" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" fill="#ffffff">Omega Soft Chews</text>
+  <text x="600" y="680" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" font-weight="700" fill="#37474f">Mobility Support</text>
+  <text x="600" y="748" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" fill="#546e7a">90 chews</text>
+</svg>

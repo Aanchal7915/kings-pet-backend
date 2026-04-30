@@ -40,6 +40,8 @@ exports.initializeDefaultSEO = async (req, res) => {
             { section: 'booking', title: "Book an Appointment", metaDescription: "Schedule your visit today.", metaKeywords: "Book Vet, Appointment" },
             { section: 'contact', title: "Contact Us | Kings Pet Hospital", metaDescription: "Get in touch with our expert team.", metaKeywords: "Contact Vet, Hospital Location" },
             { section: 'pets-care', title: "Pet Care Tips | Wellness Guide", metaDescription: "Learn how to care for your pets properly.", metaKeywords: "Wellness Guide, Pet Wellness" },
+            { section: 'pet-foods', title: "Pet Food Store | Kings Pet Hospital", metaDescription: "Quality food for dogs, cats, birds, and more.", metaKeywords: "Pet Food, Dog Food, Cat Food, Pet Nutrition" },
+            { section: 'pets-for-sale', title: "Pets For Sale | Kings Pet Hospital", metaDescription: "Adopt healthy puppies, kittens, and other pets from us.", metaKeywords: "Pets For Sale, Puppies, Kittens, Adopt Pet" },
             { section: 'privacy', title: "Privacy Policy | Kings Pet Hospital", metaDescription: "How we protect your data.", metaKeywords: "Privacy" },
             { section: 'terms', title: "Terms of Service", metaDescription: "Our terms and conditions.", metaKeywords: "Terms" }
         ];

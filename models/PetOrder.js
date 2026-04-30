@@ -15,6 +15,8 @@ const petOrderSchema = new mongoose.Schema(
     orderId: { type: String, unique: true, required: true },
     orderType: { type: String, enum: ['food', 'pet'], required: true },
 
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+
     customer: {
       name: { type: String, required: true, trim: true },
       phone: { type: String, required: true, trim: true },
@@ -39,6 +41,14 @@ const petOrderSchema = new mongoose.Schema(
     remainingAmount: { type: Number, default: 0, min: 0 },
 
     message: { type: String, default: '' },
+
+    razorpayOrderId: { type: String, default: '' },
+    razorpayPaymentId: { type: String, default: '' },
+    paymentStatus: {
+      type: String,
+      enum: ['unpaid', 'advance_paid', 'fully_paid', 'refunded'],
+      default: 'unpaid',
+    },
 
     status: {
       type: String,

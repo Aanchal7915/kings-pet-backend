@@ -7,11 +7,13 @@ const {
     updateBookingStatus,
     markRemainingReceived,
     rescheduleBooking,
+    getMyBookings,
 } = require('../controllers/bookingController');
 const { protect, adminOnly } = require('../middleware/auth');
 
 router.post('/create-order', createOrder);
 router.post('/verify-payment', verifyPayment);
+router.get('/my', protect, getMyBookings);
 
 router.get('/admin', protect, adminOnly, getAdminBookings);
 router.patch('/admin/:id/status', protect, adminOnly, updateBookingStatus);

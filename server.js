@@ -61,8 +61,8 @@ const PORT = process.env.PORT || 5000;
 const frontendPath = path.join(__dirname, 'dist');
 app.use(express.static(frontendPath, { index: false }));
 
-// Dynamic SEO Injector Catch-all (Express 5 Regex Syntax)
-app.get(/.*/, async (req, res) => {
+// Dynamic SEO Injector Catch-all (Exclude API routes)
+app.get(/^(?!\/api).*/, async (req, res) => {
     try {
         const url = req.path;
         const pathParts = url.split('/').filter(p => p);

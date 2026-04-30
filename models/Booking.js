@@ -23,6 +23,7 @@ const rescheduleHistorySchema = new mongoose.Schema(
 const bookingSchema = new mongoose.Schema(
   {
     bookingId: { type: String, unique: true, required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     customer: {
       name: { type: String, required: true, trim: true },
       phone: { type: String, required: true, trim: true },

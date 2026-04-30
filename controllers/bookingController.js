@@ -4,6 +4,20 @@ const Booking = require('../models/Booking');
 const Service = require('../models/Service');
 const Slot = require('../models/Slot');
 const Setting = require('../models/Setting');
+const jwt = require('jsonwebtoken');
+
+const tryGetUserIdFromToken = (req) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) return null;
+    const token = authHeader.split(' ')[1];
+    if (!token) return null;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded?.id || null;
+  } catch (_) {
+    return null;
+  }
+};
 
 const getRazorpay = () => new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -92,7 +106,12 @@ exports.createOrder = async (req, res) => {
     }
 
     const fullPrice = Number(variant.price || 0);
-    const advanceAmount = Math.min(Number(variant.bookingAmount || (await getAdvanceAmount(service)) || 0), fullPrice);
+    const configuredAdvance = Math.min(Number(variant.bookingAmount || (await getAdvanceAmount(service)) || 0), fullPrice);
+    const advanceAmount = configuredAdvance > 0 ? configuredAdvance : fullPrice;
+
+    if (advanceAmount === 0) {
+      return res.status(400).json({ success: false, error: 'Service price is not configured. Please contact admin.' });
+    }
 
     const order = await getRazorpay().orders.create({
       amount: Math.round(advanceAmount * 100),
@@ -110,6 +129,7 @@ exports.createOrder = async (req, res) => {
         fullPrice,
         advanceAmount,
         remainingAmount: Math.max(fullPrice - advanceAmount, 0),
+        isFree: false
       },
     });
   } catch (error) {
@@ -172,7 +192,8 @@ exports.verifyPayment = async (req, res) => {
     }
 
     const fullPrice = Number(variant.price || 0);
-    const advanceAmount = Math.min(Number(variant.bookingAmount || (await getAdvanceAmount(service)) || 0), fullPrice);
+    const configuredAdvance = Math.min(Number(variant.bookingAmount || (await getAdvanceAmount(service)) || 0), fullPrice);
+    const advanceAmount = configuredAdvance > 0 ? configuredAdvance : fullPrice;
 
     const reservedSlot = await Slot.findOneAndUpdate(
       {
@@ -188,8 +209,11 @@ exports.verifyPayment = async (req, res) => {
       return res.status(409).json({ success: false, error: 'Selected slot is no longer available' });
     }
 
+    const userId = tryGetUserIdFromToken(req);
+
     const booking = await Booking.create({
       bookingId: await nextBookingId(),
+      userId: userId || null,
       customer: {
         name: String(customer.name).trim(),
         phone: String(customer.phone).trim(),
@@ -209,11 +233,11 @@ exports.verifyPayment = async (req, res) => {
       advancePaid: advanceAmount,
       remainingAmount: Math.max(fullPrice - advanceAmount, 0),
       razorpayOrderId: razorpay_order_id,
-      razorpayPaymentId: razorpay_payment_id,
-      paymentStatus: 'advance_paid',
+      razorpayPaymentId: razorpay_payment_id || 'FREE',
+      paymentStatus: advanceAmount === 0 ? 'advance_paid' : 'advance_paid', // Keep status consistent
       bookingStatus: 'confirmed',
       statusHistory: [
-        { status: 'confirmed', changedAt: new Date(), changedBy: 'admin', note: 'Advance paid online' },
+        { status: 'confirmed', changedAt: new Date(), changedBy: 'admin', note: advanceAmount === 0 ? 'Booked with zero advance' : 'Advance paid online' },
       ],
     });
 
@@ -253,6 +277,28 @@ exports.getAdminBookings = async (req, res) => {
       .populate('slot', 'date startTime endTime capacity bookedCount isBlocked')
       .populate('service.ref', 'name slug');
 
+    return res.status(200).json({ success: true, data: bookings });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.getMyBookings = async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ success: false, error: 'User not found' });
+    
+    // Search by userId OR by customer name (for backwards compatibility/testing)
+    const bookings = await Booking.find({ 
+      $or: [
+        { userId: user._id },
+        { 'customer.name': user.name }
+      ]
+    })
+      .sort({ createdAt: -1 })
+      .populate('slot', 'date startTime endTime capacity bookedCount isBlocked')
+      .populate('service.ref', 'name slug');
     return res.status(200).json({ success: true, data: bookings });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
